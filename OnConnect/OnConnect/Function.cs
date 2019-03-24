@@ -8,6 +8,7 @@ using Amazon.Lambda.APIGatewayEvents;
 
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Newtonsoft.Json;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -19,7 +20,9 @@ namespace OnConnect
     {
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            context.Logger.LogLine("Lambda hit");
+            Console.WriteLine("OnConnect Lambda hit");
+
+            Console.Write($"request.body: {JsonConvert.SerializeObject(request.Body)}");
 
             IAmazonDynamoDB _ddbClient = new AmazonDynamoDBClient();
 
@@ -35,8 +38,8 @@ namespace OnConnect
                     Item = new Dictionary<string, AttributeValue>
                     {
                         { "PlayerId", new AttributeValue{ S = connectionId}},
-                        { "DraftId", new AttributeValue{ S = "a"}}
-
+                        { "DraftId", new AttributeValue{ S = "a"}},
+                        { "IsSocketActive", new AttributeValue{ BOOL = true} }
                     }
                 };
 

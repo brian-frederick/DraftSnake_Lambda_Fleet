@@ -15,7 +15,7 @@
     "function-timeout"     : 30,
     "function-handler"     : "OnConnect::OnConnect.Function::FunctionHandler",
     "function-name"        : "DraftSnake_OnConnect",
-    "function-role"        : "arn:aws:iam::654466467790:role/service-role/myLambdaExecution",
+    "function-role"        : "arn:aws:iam::654466467790:role/Websockets_Lambda",
     "tracing-mode"         : "PassThrough",
     "environment-variables" : ""
 }
