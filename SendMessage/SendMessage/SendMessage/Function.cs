@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using Amazon.ApiGatewayManagementApi;
+using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
+using Amazon.Runtime;
 using Newtonsoft.Json;
 
 
@@ -46,23 +52,95 @@ namespace SendMessage
 
         private async Task ProcessMessageAsync(SQSEvent.SQSMessage message, ILambdaContext context)
         {
-            context.Logger.LogLine($"Processed message {message.Body}");
+            context.Logger.LogLine($"Processing message {message.Body}");
+
+            var draftId = message.Attributes["DraftId"];
+
+            var playerConnections = await RetrievePlayerConnections(draftId);
+
+            await SendMessageToPlayers(playerConnections, message.Body);
 
             // TODO: Do interesting work based on the new message
             await Task.CompletedTask;
         }
 
-        private async Task<List<Dictionary<string, AttributeValue>>> RetrieveConnections() {
+        private async Task SendMessageToPlayers(List<Dictionary<string, AttributeValue>> playerConnections, string message)
+        {
+            
+            var endpoint = System.Environment.GetEnvironmentVariable("ENDPOINT");
+            Console.WriteLine($"Endpoint url is {endpoint}");
 
-            var scanRequest = new ScanRequest
+            var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
-                TableName = Constants.TABLE_NAME,
-                ProjectionExpression = Constants.ConnectionIdField
+                ServiceURL = endpoint
+            });
+
+            foreach (var player in playerConnections)
+            {
+                var connectionId = player["ConnectionId"].S;
+
+                var postConnectionRequest = new PostToConnectionRequest
+                {
+                    ConnectionId = connectionId,
+                    Data = new MemoryStream(UTF8Encoding.UTF8.GetBytes(message))
+                };
+
+                try
+                {
+                    Console.WriteLine($"Post to connection {connectionId}");                    
+                    await apiClient.PostToConnectionAsync(postConnectionRequest);
+                }
+                catch (AmazonServiceException e)
+                {
+                    // API Gateway returns a status of 410 GONE when the connection is no
+                    // longer available. If this happens, we simply delete the identifier
+                    // from our DynamoDB table.
+                    if (e.StatusCode == HttpStatusCode.Gone)
+                    {
+                        Dictionary<string, AttributeValueUpdate> updates = new Dictionary<string, AttributeValueUpdate>();
+                        // Update item's Setting attribute
+                        updates["IsConnected"] = new AttributeValueUpdate()
+                        {
+                            Action = AttributeAction.PUT,
+                            Value = new AttributeValue { BOOL = false }
+                        };
+
+                        var ddbUpdateRequest = new UpdateItemRequest
+                        {
+                            TableName = "DraftSnake_Players",
+                            Key = new Dictionary<string, AttributeValue>
+                            {
+                                {"ConnectionId", new AttributeValue {S = connectionId}}
+                            },
+                            AttributeUpdates = updates 
+                        };
+
+                        Console.WriteLine($"setting gone connection: {connectionId} to inactive");
+                        await _ddbClient.UpdateItemAsync(ddbUpdateRequest);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error posting message to {connectionId}: {e.Message}");
+                        Console.WriteLine(e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        private async Task<List<Dictionary<string, AttributeValue>>> RetrievePlayerConnections(string draftId) {
+
+            var request = new QueryRequest
+            {
+                TableName = "DraftSnake_Players",
+                KeyConditionExpression = "DraftId = :v_DraftId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
+                    {":v_DraftId", new AttributeValue { S = draftId }},
+                },
             };
 
-            var scanResponse = await _ddbClient.ScanAsync(scanRequest);
+            var scanResponse = await _ddbClient.QueryAsync(request);
 
-            Console.Write(JsonConvert.SerializeObject(scanResponse.Items));
+            Console.Write("Query Reponse", JsonConvert.SerializeObject(scanResponse.Items));
 
             return scanResponse.Items;
         }
