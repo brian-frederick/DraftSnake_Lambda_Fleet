@@ -23,46 +23,13 @@ namespace OnConnect
             Console.WriteLine("OnConnect Lambda hit");
 
             Console.Write($"request.body: {JsonConvert.SerializeObject(request.Body)}");
-
-            IAmazonDynamoDB _ddbClient = new AmazonDynamoDBClient();
-
-            try
+           
+            return new APIGatewayProxyResponse
             {
-                var connectionId = request.RequestContext.ConnectionId;
-
-                context.Logger.LogLine($"ConnectionId: {connectionId}");
-
-                var ddbRequest = new PutItemRequest
-                {
-                    TableName = "DraftSnake_Players",
-                    Item = new Dictionary<string, AttributeValue>
-                    {
-                        { "PlayerId", new AttributeValue{ S = connectionId}},
-                        { "DraftId", new AttributeValue{ S = "a"}},
-                        { "IsSocketActive", new AttributeValue{ BOOL = true} }
-                    }
-                };
-
-                await _ddbClient.PutItemAsync(ddbRequest);
-
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = 200,
-                    Body = "Socket Connected."
-                };
-            }
-            catch (Exception e)
-            {
-                context.Logger.LogLine("Error connecting: " + e.Message);
-                context.Logger.LogLine(e.StackTrace);
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = 500,
-                    Body = $"Failed to connect: {e.Message}"
-                };
-            }
-        }
-
+                StatusCode = 200,
+                Body = "Socket Connected."
+            };
+        }        
     }
 
 }
