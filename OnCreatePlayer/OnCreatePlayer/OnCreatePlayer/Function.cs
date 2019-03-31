@@ -69,7 +69,9 @@ namespace OnCreatePlayer
         {
             var body = JsonConvert.DeserializeObject<JObject>(request.Body);
             var draftId = body["draftId"]?.ToString();
-            var name = body["newPlayer.name"]?.ToString();
+            var name = body["newPlayer"]?["name"]?.ToString();
+
+            
 
             // TODO: Validate draft is active and Name is not a duplicate
 
