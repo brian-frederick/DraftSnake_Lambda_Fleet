@@ -167,8 +167,10 @@ namespace DraftSnake_Players_SendMessage
 
             return new Player()
             {
+                DraftId = item["DraftId"].S,
+                Name = item["Name"].S,                
                 ConnectionId = item["ConnectionId"].S,
-                IsConnected = item["IsConnected"].BOOL
+                IsConnected = item["IsConnected"].BOOL,
             };
         }
 
@@ -194,6 +196,8 @@ namespace DraftSnake_Players_SendMessage
 
         public class Player
         {
+            public string DraftId { get; set; }
+            public string Name { get; set; }
             public string ConnectionId { get; set; }
             public Boolean IsConnected { get; set; }
         }
