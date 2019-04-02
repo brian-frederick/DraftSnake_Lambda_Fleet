@@ -26,7 +26,8 @@ namespace OnSubmitPick
 
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            context.Logger.LogLine("OnSubmitPick Lambda hit");
+            context.Logger.LogLine("OnSubmitPick Lambda hit. Request:");
+            Console.Write(JsonConvert.SerializeObject(request));
 
             var newPick = MapRequestBodyToPick(request.Body);
 
@@ -59,7 +60,7 @@ namespace OnSubmitPick
             var body = JsonConvert.DeserializeObject<JObject>(requestBody);
             var draftId = body["draftId"]?.ToString();
             var playerName = body["name"]?.ToString();
-            var selection = body["selection"]?.ToString();
+            var selection = body["pick"]?["selection"]?.ToString();
 
             return new Pick()
             {
@@ -82,15 +83,18 @@ namespace OnSubmitPick
                         {":v_DraftId", new AttributeValue { S = draftId }},
                     },
                 ScanIndexForward = false,
-                AttributesToGet = new List<string> { "OverallOrder" }
+                Limit = 1
             };
 
             var queryResponse = await _ddbClient.QueryAsync(ddbQueryRequest);
 
             if (queryResponse?.Items.Count > 0)
             {
+                Console.WriteLine($"Current highest OverallOrder {queryResponse.Items[0]["OverallOrder"]}");
+
                 // With ScanIndexForward as false, the highest OverallOrder will be the first item in the list.
                 int.TryParse(queryResponse.Items[0]["OverallOrder"].N, out nextOverallOrder);
+                nextOverallOrder++;
             }
 
             return nextOverallOrder;
@@ -107,7 +111,8 @@ namespace OnSubmitPick
                         { "OverallOrder", new AttributeValue{N = newPick.OverallOrder.ToString() } },
                         { "PlayerId", new AttributeValue{ S = newPick.PlayerId }},
                         { "Selection", new AttributeValue{ S = newPick.Selection } }
-                    }
+                    },
+                
             };
 
             await _ddbClient.PutItemAsync(ddbRequest);

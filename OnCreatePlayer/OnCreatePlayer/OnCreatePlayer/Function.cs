@@ -22,7 +22,8 @@ namespace OnCreatePlayer
     {
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            context.Logger.LogLine( "OnCreatePlayer Lambda hit");
+            context.Logger.LogLine("OnCreatePlayer Lambda hit. Request:");
+            Console.Write(JsonConvert.SerializeObject(request));
 
             IAmazonDynamoDB _ddbClient = new AmazonDynamoDBClient();
 
