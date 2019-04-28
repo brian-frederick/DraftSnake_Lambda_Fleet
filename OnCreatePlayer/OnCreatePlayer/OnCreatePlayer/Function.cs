@@ -37,7 +37,7 @@ namespace OnCreatePlayer
 
                 var ddbRequest = new PutItemRequest
                 {
-                    TableName = "DraftSnake_Players",
+                    TableName = "Players",
                     Item = new Dictionary<string, AttributeValue>
                     {
                         { "DraftId", new AttributeValue{ S = newPlayer.DraftId }},
