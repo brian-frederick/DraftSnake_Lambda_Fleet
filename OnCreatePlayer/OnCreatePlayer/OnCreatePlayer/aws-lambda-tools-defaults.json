@@ -6,7 +6,7 @@
         "dotnet lambda help",
         "All the command line options for the Lambda command can be specified in this file."
     ],
-    "profile"     : "Visual_Studio",
+    "profile"     : "AWS_DraftSnake_Visual_Studio",
     "region"      : "us-east-1",
     "configuration" : "Release",
     "framework"     : "netcoreapp2.1",
@@ -14,8 +14,8 @@
     "function-memory-size" : 256,
     "function-timeout"     : 30,
     "function-handler"     : "OnCreatePlayer::OnCreatePlayer.Function::FunctionHandler",
-    "function-name"        : "DraftSnake_OnCreatePlayer",
-    "function-role"        : "arn:aws:iam::654466467790:role/Websockets_Lambda",
+    "function-name"        : "OnCreatePlayer",
+    "function-role"        : "arn:aws:iam::628677708876:role/Websockets_Lambda",
     "tracing-mode"         : "PassThrough",
     "environment-variables" : ""
 }

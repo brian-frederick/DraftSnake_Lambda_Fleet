@@ -77,7 +77,7 @@ namespace OnSubmitPick
 
             var ddbQueryRequest = new QueryRequest
             {
-                TableName = "DraftSnake_Picks",
+                TableName = "Picks",
                 KeyConditionExpression = "DraftId = :v_DraftId",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                         {":v_DraftId", new AttributeValue { S = draftId }},
@@ -104,7 +104,7 @@ namespace OnSubmitPick
         {
             var ddbRequest = new PutItemRequest
             {
-                TableName = "DraftSnake_Picks",
+                TableName = "Picks",
                 Item = new Dictionary<string, AttributeValue>
                     {
                         { "DraftId", new AttributeValue{ S = newPick.DraftId }},
