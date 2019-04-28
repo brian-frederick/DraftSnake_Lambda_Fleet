@@ -16,6 +16,8 @@ using Amazon.Runtime;
 using System.Net;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
+using Amazon.SimpleSystemsManagement;
+using Amazon.SimpleSystemsManagement.Model;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -25,6 +27,7 @@ namespace DraftSnake_Players_SendMessage
     public class Function
     {
         IAmazonDynamoDB _ddbClient = new AmazonDynamoDBClient();
+        IAmazonSimpleSystemsManagement _paramClient = new AmazonSimpleSystemsManagementClient();
         private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
 
         public async Task FunctionHandler(DynamoDBEvent dynamoEvent, ILambdaContext context)
@@ -78,7 +81,9 @@ namespace DraftSnake_Players_SendMessage
         {
             Console.WriteLine("Sending Message To Players");
 
-            var endpoint = System.Environment.GetEnvironmentVariable("ENDPOINT");
+            //var endpoint = System.Environment.GetEnvironmentVariable("ENDPOINT");
+
+            var endpoint = await RetrieveEndPointParam();
             Console.WriteLine($"Endpoint url is {endpoint}");
 
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
@@ -172,6 +177,18 @@ namespace DraftSnake_Players_SendMessage
                 ConnectionId = item["ConnectionId"].S,
                 IsConnected = item["IsConnected"].BOOL,
             };
+        }
+
+        public async Task<string> RetrieveEndPointParam()
+        {
+            var paramRequest = new GetParametersRequest
+            {
+                Names = new List<string> { "SOCKET_ENDPOINT" }
+            };
+
+            var response = await _paramClient.GetParametersAsync(paramRequest);
+
+            return response.Parameters[0].Value;
         }
 
         public class PlayerEvent

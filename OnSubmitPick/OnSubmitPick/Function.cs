@@ -97,7 +97,7 @@ namespace OnSubmitPick
                 nextOverallOrder++;
             }
 
-            return nextOverallOrder;
+              return nextOverallOrder;
         }
 
         public async Task SubmitPickToDb(Pick newPick)
