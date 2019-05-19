@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2016
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnWebSocketMessageQueued", "OnWebSocketMessageQueued\OnWebSocketMessageQueued.csproj", "{B76F0BDB-DBD9-4A89-81D3-BEF87C272520}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnWebSocketMessageQueued.Tests", "OnWebSocketMessageQueued.Tests\OnWebSocketMessageQueued.Tests.csproj", "{05420484-FAFA-46CB-BA9E-14EA8ADE0F00}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B76F0BDB-DBD9-4A89-81D3-BEF87C272520}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B76F0BDB-DBD9-4A89-81D3-BEF87C272520}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B76F0BDB-DBD9-4A89-81D3-BEF87C272520}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B76F0BDB-DBD9-4A89-81D3-BEF87C272520}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05420484-FAFA-46CB-BA9E-14EA8ADE0F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05420484-FAFA-46CB-BA9E-14EA8ADE0F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05420484-FAFA-46CB-BA9E-14EA8ADE0F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05420484-FAFA-46CB-BA9E-14EA8ADE0F00}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {70D2607D-5EF7-4556-9F92-BC3B9786002C}
+	EndGlobalSection
+EndGlobal
