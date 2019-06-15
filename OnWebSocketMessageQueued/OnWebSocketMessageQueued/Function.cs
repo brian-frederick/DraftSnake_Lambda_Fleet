@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
+using Microsoft.Extensions.DependencyInjection;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -14,6 +15,9 @@ namespace OnWebSocketMessageQueued
 {
     public class Function
     {
+
+        public IConfigurationService ConfigurationService { get; }
+
         /// <summary>
         /// Default constructor. This constructor is used by Lambda to construct the instance. When invoked in a Lambda environment
         /// the AWS credentials will come from the IAM role associated with the function and the AWS region will be set to the
@@ -22,6 +26,14 @@ namespace OnWebSocketMessageQueued
         public Function()
         {
 
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+
+            var serviceProvider = services.BuildServiceProvider();
+
+            // TODO: Get Service from DI system.
+
+            var configService = serviceProvider.GetService<IConfigurationService>();
         }
 
 
@@ -46,6 +58,12 @@ namespace OnWebSocketMessageQueued
 
             // TODO: Do interesting work based on the new message
             await Task.CompletedTask;
+        }
+
+        private void ConfigureServices(IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddTransient<IEnvironmentService, EnvironmentService>();
+            serviceCollection.AddTransient<IConfigurationService, ConfigurationService>();
         }
     }
 }
