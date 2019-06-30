@@ -41,14 +41,43 @@ namespace OnCreatePlayer
 
             var newPlayer = MapRequestToPlayer(request);
 
-            await _playerService.Put(newPlayer);
+            try
+            {
+                await _playerService.Put(newPlayer);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error creating player. Error: {e.Message}");
 
-            await _messageService.SendMessage(new PlayerCreatedMessage(newPlayer));
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = 500,
+                    Body = $"There was an error creating Player: {newPlayer.Name}."
+                };
+            }
+
+            try
+            {
+                await _messageService.SendMessage(new PlayerCreatedMessage(newPlayer));
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine($"Error sending PlayerCreatedMessage. Error: {e.Message}");
+
+                // there will be so many messages sent when players are being created that we'll get the new set of players on the next event.
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = 200,
+                    Body = $"There was an error sending message to other players but it looks like our new player was created."
+                };
+            }
+
 
             return new APIGatewayProxyResponse
             {
                 StatusCode = 200,
-                Body = "Player created."
+                Body = $"Player {newPlayer.Name} created."
             };
 
         }
