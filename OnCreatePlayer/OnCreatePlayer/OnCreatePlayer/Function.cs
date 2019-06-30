@@ -22,7 +22,6 @@ namespace OnCreatePlayer
 {
     public class Function
     {
-
         private readonly IPlayerService _playerService;
         private readonly IMessageService<PlayerCreatedMessage> _messageService;
 
