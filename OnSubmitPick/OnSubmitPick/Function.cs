@@ -12,6 +12,12 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.DynamoDBv2;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using DraftSnakeLibrary.Services.Picks;
+using DraftSnakeLibrary.Services.Messages;
+using DraftSnakeLibrary.Repositories;
+using DraftSnakeLibrary.Models.Picks;
+using DraftSnakeLibrary.Services;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -21,8 +27,16 @@ namespace OnSubmitPick
     public class Function
     {
         private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
-        IAmazonDynamoDB _ddbClient = new AmazonDynamoDBClient();
+        private readonly IPickService _pickService;
 
+        public Function()
+        {
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            var serviceProvider = services.BuildServiceProvider();
+            _pickService = serviceProvider.GetRequiredService<IPickService>();
+            //_messageService = serviceProvider.GetRequiredService<IMessageService<PlayerCreatedMessage>>();
+        }
 
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
@@ -33,9 +47,7 @@ namespace OnSubmitPick
 
             try
             {
-                newPick.OverallOrder = await RetrieveNextOverallOrder(newPick.DraftId);
-
-                await SubmitPickToDb(newPick);
+                await _pickService.Put(newPick);
 
                 return new APIGatewayProxyResponse
                 {
@@ -70,60 +82,16 @@ namespace OnSubmitPick
             };
         }
 
-        public async Task<int> RetrieveNextOverallOrder(string draftId)
+        public void ConfigureServices(ServiceCollection services)
         {
-            // If we don't find any picks for this draft, our first pick will be OverallOrder 1.
-            var nextOverallOrder = 1;
-
-            var ddbQueryRequest = new QueryRequest
-            {
-                TableName = "Picks",
-                KeyConditionExpression = "DraftId = :v_DraftId",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
-                        {":v_DraftId", new AttributeValue { S = draftId }},
-                    },
-                ScanIndexForward = false,
-                Limit = 1
-            };
-
-            var queryResponse = await _ddbClient.QueryAsync(ddbQueryRequest);
-
-            if (queryResponse?.Items.Count > 0)
-            {
-                Console.WriteLine($"Current highest OverallOrder {queryResponse.Items[0]["OverallOrder"]}");
-
-                // With ScanIndexForward as false, the highest OverallOrder will be the first item in the list.
-                int.TryParse(queryResponse.Items[0]["OverallOrder"].N, out nextOverallOrder);
-                nextOverallOrder++;
-            }
-
-              return nextOverallOrder;
+            services.AddTransient<IPickService, PickService>();
+            //services.AddTransient<IMessageService<>, MessageService<>>();
+            services.AddTransient<IModelDynamoDbRepository<Pick>, PickRepository>();
+            services.AddTransient<IAmazonDynamoDB, AmazonDynamoDBClient>();
+            services.AddTransient<IModelMapper<Pick>, PickMapper>();
+            //services.AddTransient<IMessageRepository<PlayerCreatedMessage>, MessageRepository<PlayerCreatedMessage>>();
+            //services.AddTransient<IAmazonSQS, AmazonSQSClient>();
         }
 
-        public async Task SubmitPickToDb(Pick newPick)
-        {
-            var ddbRequest = new PutItemRequest
-            {
-                TableName = "Picks",
-                Item = new Dictionary<string, AttributeValue>
-                    {
-                        { "DraftId", new AttributeValue{ S = newPick.DraftId }},
-                        { "OverallOrder", new AttributeValue{N = newPick.OverallOrder.ToString() } },
-                        { "PlayerId", new AttributeValue{ S = newPick.PlayerId }},
-                        { "Selection", new AttributeValue{ S = newPick.Selection } }
-                    },
-                
-            };
-
-            await _ddbClient.PutItemAsync(ddbRequest);
-        }
-
-        public class Pick
-        {
-            public string DraftId { get; set; }
-            public int OverallOrder { get; set; }
-            public string PlayerId { get; set; }
-            public string Selection { get; set; }
-        }
     }
 }

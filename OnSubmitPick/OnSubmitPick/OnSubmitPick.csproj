@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
+  <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
@@ -10,5 +14,11 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0" />
     <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="1.1.0" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.17.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="DraftSnakeLibrary">
+      <HintPath>..\..\..\DraftSnakeLibrary\DraftSnakeLibrary\DraftSnakeLibrary\bin\Release\netcoreapp2.1\DraftSnakeLibrary.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
