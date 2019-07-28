@@ -18,6 +18,8 @@ using DraftSnakeLibrary.Services.Messages;
 using DraftSnakeLibrary.Repositories;
 using DraftSnakeLibrary.Models.Picks;
 using DraftSnakeLibrary.Services;
+using DraftSnakeLibrary.Models.Messages;
+using Amazon.SQS;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -28,6 +30,7 @@ namespace OnSubmitPick
     {
         private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
         private readonly IPickService _pickService;
+        private readonly IMessageService<PickSubmittedMessage> _messageService;
 
         public Function()
         {
@@ -35,7 +38,7 @@ namespace OnSubmitPick
             ConfigureServices(services);
             var serviceProvider = services.BuildServiceProvider();
             _pickService = serviceProvider.GetRequiredService<IPickService>();
-            //_messageService = serviceProvider.GetRequiredService<IMessageService<PlayerCreatedMessage>>();
+            _messageService = serviceProvider.GetRequiredService<IMessageService<PickSubmittedMessage>>();
         }
 
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
@@ -48,16 +51,26 @@ namespace OnSubmitPick
             try
             {
                 await _pickService.Put(newPick);
+                Console.Write("Pick Saved.");
+
+                var msg = new PickSubmittedMessage()
+                {
+                    DraftId = newPick.DraftId,
+                    Pick = newPick
+                };
+
+                await _messageService.SendMessage(msg);
+                Console.Write("Pick Submitted Message sent.");
 
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = 200,
-                    Body = "Socket Connected."
+                    Body = "Pick Submitted."
                 };
             }
             catch (Exception e)
             {
-                context.Logger.LogLine("Error connecting: " + e.Message);
+                context.Logger.LogLine("Error adding pick: " + e.Message);
                 context.Logger.LogLine(e.StackTrace);
                 return new APIGatewayProxyResponse
                 {
@@ -85,12 +98,12 @@ namespace OnSubmitPick
         public void ConfigureServices(ServiceCollection services)
         {
             services.AddTransient<IPickService, PickService>();
-            //services.AddTransient<IMessageService<>, MessageService<>>();
+            services.AddTransient<IMessageService<PickSubmittedMessage>, MessageService<PickSubmittedMessage>>();
             services.AddTransient<IModelDynamoDbRepository<Pick>, PickRepository>();
             services.AddTransient<IAmazonDynamoDB, AmazonDynamoDBClient>();
             services.AddTransient<IModelMapper<Pick>, PickMapper>();
-            //services.AddTransient<IMessageRepository<PlayerCreatedMessage>, MessageRepository<PlayerCreatedMessage>>();
-            //services.AddTransient<IAmazonSQS, AmazonSQSClient>();
+            services.AddTransient<IMessageRepository<PickSubmittedMessage>, MessageRepository<PickSubmittedMessage>>();
+            services.AddTransient<IAmazonSQS, AmazonSQSClient>();
         }
 
     }
